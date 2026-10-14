@@ -1,0 +1,2 @@
+{ "name": "tilt-jobs", "private": true, "type": "module", "engines": { "node": ">=20" },
+  "scripts": { "test": "node precompute/test.mjs", "precompute": "node precompute/run.mjs" } }

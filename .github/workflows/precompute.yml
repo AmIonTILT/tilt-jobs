@@ -1,0 +1,20 @@
+# Refreshes Tilt scores for ~10K public Hyperliquid wallets every day, split across 4 runs (one per 6 hours) so each stays inside
+# the 6-hour job limit. Public repo: Actions minutes are free. Needs repository secrets KV_REST_API_URL and KV_REST_API_TOKEN.
+name: precompute-scores
+on:
+  schedule: [{ cron: '17 0,6,12,18 * * *' }]
+  workflow_dispatch: { inputs: { shard: { default: '0', description: 'run 0-3' } } }
+concurrency: { group: precompute, cancel-in-progress: false }
+permissions: { contents: read }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node precompute/test.mjs
+      - name: compute
+        env: { KV_REST_API_URL: '${{ secrets.KV_REST_API_URL }}', KV_REST_API_TOKEN: '${{ secrets.KV_REST_API_TOKEN }}' }
+        run: node precompute/run.mjs --shards 4 --concurrency 3 --budget-min 335 ${{ github.event_name == 'workflow_dispatch' && format('--shard {0}', github.event.inputs.shard) || '' }}
