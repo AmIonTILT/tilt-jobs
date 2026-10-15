@@ -3,7 +3,7 @@
 name: precompute-scores
 on:
   schedule: [{ cron: '17 0,6,12,18 * * *' }]
-  workflow_dispatch: { inputs: { shard: { default: '0', description: 'run 0-3' } } }
+  workflow_dispatch: { inputs: { shard: { default: '0', description: 'run 0-3' }, limit: { default: '0', description: 'max wallets (0 = whole shard)' } } }
 concurrency: { group: precompute, cancel-in-progress: false }
 permissions: { contents: read }
 jobs:
@@ -15,6 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: node precompute/test.mjs
+      - run: node precompute/test-live.mjs
       - name: compute
         env: { KV_REST_API_URL: '${{ secrets.KV_REST_API_URL }}', KV_REST_API_TOKEN: '${{ secrets.KV_REST_API_TOKEN }}' }
-        run: node precompute/run.mjs --shards 4 --concurrency 3 --budget-min 335 ${{ github.event_name == 'workflow_dispatch' && format('--shard {0}', github.event.inputs.shard) || '' }}
+        run: node precompute/run.mjs --shards 4 --concurrency 2 --budget-min 335 ${{ github.event_name == 'workflow_dispatch' && format('--shard {0} --limit {1}', github.event.inputs.shard, github.event.inputs.limit) || '' }}

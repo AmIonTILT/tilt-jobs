@@ -1,2 +1,13 @@
-{ "name": "tilt-jobs", "private": true, "type": "module", "engines": { "node": ">=20" },
-  "scripts": { "test": "node precompute/test.mjs", "precompute": "node precompute/run.mjs" } }
+{
+  "name": "tilt-jobs",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node precompute/test.mjs",
+    "precompute": "node precompute/run.mjs",
+    "test:live": "node precompute/test-live.mjs"
+  }
+}
