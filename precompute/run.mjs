@@ -1,4 +1,4 @@
-// Daily score refresh for public Hyperliquid wallets -> the site's score cache (Upstash hash tilt:sc:30d).
+// Daily score refresh for public Hyperliquid wallets -> the site's score cache (Upstash hash tilt:sc2:30d).
 // Usage: node precompute/run.mjs [--shard 0..N-1 (default: UTC hour / (24/N))] [--shards 4] [--concurrency 3] [--budget-min 340] [--dry]
 import { computeShare, parseRange } from '../lib/score.mjs';
 import { store, pack, hashKey } from '../lib/store.mjs';
