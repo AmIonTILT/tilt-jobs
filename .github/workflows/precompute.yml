@@ -1,15 +1,16 @@
-# Refreshes Tilt scores for ~10K public Hyperliquid wallets every day, split across 4 runs (one per 6 hours) so each stays inside
-# the 6-hour job limit. Public repo: Actions minutes are free. Needs repository secrets KV_REST_API_URL and KV_REST_API_TOKEN.
+# Backup refresher for Tilt scores: the top ~50 public Hyperliquid wallets once a day. The main refresh runs elsewhere; Hyperliquid
+# answers shared CI runners slowly, so this job stays small enough to finish well inside its time budget. Public repo: Actions minutes are free.
+# Needs repository secrets KV_REST_API_URL and KV_REST_API_TOKEN.
 name: precompute-scores
 on:
-  schedule: [{ cron: '17 0,6,12,18 * * *' }]
-  workflow_dispatch: { inputs: { shard: { default: '0', description: 'run 0-3' }, limit: { default: '0', description: 'max wallets (0 = whole shard)' } } }
+  schedule: [{ cron: '17 18 * * *' }]
+  workflow_dispatch: { inputs: { limit: { default: '50', description: 'max wallets from the priority list' } } }
 concurrency: { group: precompute, cancel-in-progress: false }
 permissions: { contents: read }
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,4 +19,4 @@ jobs:
       - run: node precompute/test-live.mjs
       - name: compute
         env: { KV_REST_API_URL: '${{ secrets.KV_REST_API_URL }}', KV_REST_API_TOKEN: '${{ secrets.KV_REST_API_TOKEN }}' }
-        run: node precompute/run.mjs --shards 4 --concurrency 2 --budget-min 335 ${{ github.event_name == 'workflow_dispatch' && format('--shard {0} --limit {1}', github.event.inputs.shard, github.event.inputs.limit) || '' }}
+        run: node precompute/run.mjs --shard 0 --shards 4 --concurrency 2 --batch 10 --budget-min 160 --limit ${{ github.event.inputs.limit || '50' }}
