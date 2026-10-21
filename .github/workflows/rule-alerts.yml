@@ -1,0 +1,20 @@
+name: rule-alerts-tick
+# Tilt live rule alerts: POST a=run every 5 min. Public repo, so logs are public:
+# never echo the key or the response body; print ok/fail only.
+on:
+  schedule: [{ cron: '*/5 * * * *' }]
+  workflow_dispatch:
+concurrency: { group: rule-alerts, cancel-in-progress: false }
+permissions: {}
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: POST a=run
+        env: { KEY: '${{ secrets.ALERTS_INTERNAL_KEY }}' }
+        run: |
+          echo "::add-mask::$KEY"
+          body=$(mktemp)
+          code=$(curl -sS --max-time 60 -o "$body" -w '%{http_code}' -X POST -H "x-alerts-key: $KEY" -H "user-agent: Mozilla/5.0 (tilt-rule-alerts-gha)" "https://amiontilt.com/api/notify?a=run" 2>/dev/null) || code=000
+          if [ "$code" = "200" ] && grep -q '"ok":true' "$body"; then rm -f "$body"; echo "ok"; else rm -f "$body"; echo "fail (http $code)"; exit 1; fi
